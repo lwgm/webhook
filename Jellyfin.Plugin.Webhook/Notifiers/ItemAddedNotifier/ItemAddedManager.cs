@@ -57,7 +57,7 @@ public class ItemAddedManager : IItemAddedManager
                     {
                         // Remove item from queue.
                         _itemProcessQueue.TryRemove(key, out _);
-                        return;
+                        continue;
                     }
 
                     _logger.LogDebug("Item {ItemName}", item.Name);

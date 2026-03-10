@@ -43,10 +43,10 @@ namespace Jellyfin.Plugin.Webhook.Notifiers.ItemRemovedNotifier
         /// <inheritdoc />
         public async Task ProcessItemsAsync()
         {
-            _logger.LogError("ProcessItemsAsync");
+            _logger.LogDebug("ProcessItemsAsync");
             // Attempt to process all items in queue.
-            // var currentItems = _itemProcessQueue.ToArray();
-            foreach (var (key, item) in _itemProcessQueue)
+            var currentItems = _itemProcessQueue.ToArray();
+            foreach (var (key, item) in currentItems)
             {
                 var dataObject = DataObjectHelpers
                     .GetBaseDataObject(_applicationHost, NotificationType.ItemRemoved)
@@ -54,15 +54,15 @@ namespace Jellyfin.Plugin.Webhook.Notifiers.ItemRemovedNotifier
                 dataObject[nameof(item.Path)] = item.Path;
                 if (string.IsNullOrEmpty(item.Path))
                 {
-                    _logger.LogError("item {0} has no path", item.Name);
-                    return; // no notification send
+                    _logger.LogWarning("Item {ItemName} has no path, skipping notification", item.Name);
+                    continue; // no notification send
                 }
 
                 var itemexist = _libraryManager.GetItemById(key);
                 if (itemexist is not null)
                 {
-                    _logger.LogError("item {Itemname} still exist", item.Name);
-                    return;
+                    _logger.LogDebug("Item {ItemName} still exists, skipping notification", item.Name);
+                    continue;
                 }
 
                 var itemType = item.GetType();
@@ -77,7 +77,7 @@ namespace Jellyfin.Plugin.Webhook.Notifiers.ItemRemovedNotifier
         public void AddItem(BaseItem item)
         {
             _itemProcessQueue.TryAdd(item.Id, item);
-            _logger.LogError("Queued {0} for notification, its path is {1}", item.Name, item.Path);
+            _logger.LogDebug("Queued {ItemName} for notification, its path is {ItemPath}", item.Name, item.Path);
         }
     }
 }
